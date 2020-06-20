@@ -1,62 +1,95 @@
 <template>
-    <div>
-        <h1>{{ msg }}</h1>
-        <button @click="ok">hello</button>
-        <div id="container" style="height:500px;"></div>
-    </div>
+    <Layout>
+        <Header>
+            <h1>{{ msg }}</h1>
+        </Header>
+        <Layout>
+            <Sider hide-trigger :width="250">
+              <FileTree :files="files" v-model="activeFile" @new-file="newfile" @rename="rename"/>
+              <CompilerCard :files="files" :activeFile="activeFile"/>
+            </Sider>
+            <Content>
+                <FileEditors :files="files" v-model="activeFile" @content-change="fileChange"/>
+            </Content>
+        </Layout>
+        <Footer></Footer>
+    </Layout>
 </template>
 
 <script>
-//import "browser-solc"
-import * as monaco from 'monaco-editor'
-const solcjs = require("solc-js");
+import FileTree from "./FileTree"
+import FileEditors from "./FileEditors"
+import CompilerCard from "./CompilerCard"
 //const ResolverEngine = require('solc-resolver').resolverEngine;
 const sourceCode = `
 pragma solidity >0.4.99 <0.6.0;
 
-library OldLibrary {
-  function someFunction(uint8 a) public returns(bool);
-}
-
 contract NewContract {
   function f(uint8 a) public returns (bool) {
-      return OldLibrary.someFunction(a);
+      return a>0;
+  }
+}
+contract Hello {
+    uint256 x;
+    constructor(uint256 a)public {x=a;}
+  function f(uint8 a) public returns (bool) {
+      return a<10;
   }
 }`;
 
-let editor;
-function monacoInit(){
-  window.monaco = monaco;
-    editor = monaco.editor.create(document.getElementById("container"), {
-    value: sourceCode,
-    language: "Solidity",
-
-    lineNumbers: "on",
-    roundedSelection: false,
-    scrollBeyondLastLine: true,
-    readOnly: false,
-    theme: "vs-dark",
-  });
-  window.editor = editor;
+function filesInit(files){
+    for(let id = 0; id < files.length; id++){
+        let file = files[id];
+        file.id = id;
+    }
+    return files;
 }
+function fileNew(files, name) {
+    files.push({
+        id: files.length,
+        name,
+        content:'',
+    })
+}
+let files = filesInit([
+    {
+        id: 0,
+        name:"a.sol",
+        content: sourceCode
+    }
+]);
 let compiler;
 export default {
     name: "HelloWorld",
-    data(){
-      console.log("data");
-      return {};
+    data() {
+        return {
+            activeFile:0,
+            files
+        };
     },
+    components:{FileTree,FileEditors,CompilerCard},
     props: {
         msg: String
     },
-    async mounted(){
-      const version = "v0.5.1-stable-2018.12.03";
-      compiler = await solcjs(version);
-      monacoInit();
-    },
     methods: {
+        fileChange(id, content){
+            let file = this.files[id];
+            file.content = content;
+            //this.files[id].content = content;
+            this.$set(this.files, id, file);
+            console.log("file changed");
+        },
+        rename(id, newname){
+            //this.files[id].name = newname;
+            let file = this.files[id];
+            file.name = newname;
+            this.$set(this.files, id, file);
+        },
+        newfile(name){
+            if(name == undefined) name = "new"+this.files.length+".sol";
+            fileNew(this.files, name);
+        },
         async ok() {
-
             //console.log(solcjs);
             //console.log(ResolverEngine);
 
@@ -64,12 +97,19 @@ export default {
 
             // const compiler = await solcjs()
 
-            const output = await compiler(editor.getValue(), e=>e?"":"");
+            const output = await compiler(sourceCode, e =>
+                e ? "" : ""
+            );
 
             //var wrapper = require('solc-wrapper');
             //var solc = wrapper(window.Module);
             //console.log(wrapper);
             console.log(output);
+        }
+    },
+    watch:{
+        activeFile(){
+            console.log(this.activeFile, this.activeFile>=0?this.files[this.activeFile].name:this.activeFile);
         }
     }
 };
