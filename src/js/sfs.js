@@ -8,11 +8,13 @@ function newSlot(){
 }
 
 function getSlotContent(slot){
+    console.log('gutSlotContent',slot, 'file_'+slot);
     return localStorage['file_'+slot];
 }
 
 function putSlotContent(slot, content){
     localStorage['file_'+slot] = content;
+    console.log('putSlotContent',slot, 'file_'+slot, content);
 }
 function delSlotContent(slot) {
     delete localStorage['file_'+slot];
@@ -23,11 +25,11 @@ function hasFS(){
 }
 function getFile(path) {
     let file = findFile(path);
-    return getSlotContent(file[1]);
+    return getSlotContent(file[0][1]); // [[name,slot], index]
 }
 function saveFile(path, content) {
-    let file = findFile(path);
-    putSlotContent(file[1], content);
+    let file = findFile(path); // [[name,slot], index]
+    putSlotContent(file[0][1], content);
 }
 // [[name, slot],...]
 let cachedDir = null;
