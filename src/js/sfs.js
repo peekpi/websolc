@@ -8,13 +8,11 @@ function newSlot(){
 }
 
 function getSlotContent(slot){
-    console.log('gutSlotContent',slot, 'file_'+slot);
     return localStorage['file_'+slot];
 }
 
 function putSlotContent(slot, content){
     localStorage['file_'+slot] = content;
-    console.log('putSlotContent',slot, 'file_'+slot, content);
 }
 function delSlotContent(slot) {
     delete localStorage['file_'+slot];
