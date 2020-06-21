@@ -20,7 +20,7 @@
             <Select v-model="selectOutput">
                 <Option v-for="(item,index) in outputList" :value="index" :key="index">{{ item.contract + ' - ' + item.file }}</Option>
             </Select>
-            <Deploy :contractInfo="outputs?outputs.contracts[outputList[selectOutput].file][outputList[selectOutput].contract]:undefined" />
+            <Deploy :contractInfo="outputList.length?outputs.contracts[outputList[selectOutput].file][outputList[selectOutput].contract]:undefined" />
         </Card>
     </div>
 </template>
@@ -61,7 +61,7 @@ export default {
             const soljsonReleases = window.soljsonReleases;
             let verList = [];
             for (let ver in soljsonReleases) {
-                if (ver.startsWith("0.5."))
+                //if (ver.startsWith("0.5."))
                     verList.push(soljsonReleases[ver].slice(9, -3));
             }
             return verList;

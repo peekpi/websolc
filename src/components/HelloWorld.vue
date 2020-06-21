@@ -1,5 +1,5 @@
 <template>
-    <Layout>
+    <Layout class='font-light'>
         <Header>
             <h1>{{ msg }}</h1>
         </Header>
@@ -20,6 +20,7 @@
 import FileTree from "./FileTree"
 import FileEditors from "./FileEditors"
 import CompilerCard from "./CompilerCard"
+import sfs from '../js/sfs.js'
 //const ResolverEngine = require('solc-resolver').resolverEngine;
 const sourceCode = `
 pragma solidity >0.4.99 <0.6.0;
@@ -37,25 +38,39 @@ contract Hello {
   }
 }`;
 
+function fileObj(id, name) {
+    return {
+            id,
+            name,
+            get content(){return sfs.getFile(this.name)},
+            set content(n){ sfs.saveFile(this.name, n)},
+        };
+}
+
 function filesInit(files){
-    for(let id = 0; id < files.length; id++){
-        let file = files[id];
-        file.id = id;
+    if(!sfs.hasFS()){
+        files.map(file=>{
+            sfs.newFile(file.name);
+            sfs.saveFile(file.name, file.content);
+        });
     }
-    return files;
+    let dirs = sfs.getDirs();
+    let retFiles = [];
+    for(let id = 0; id < dirs.length; id++){
+        const name = dirs[id];
+        retFiles.push(fileObj(id, name));
+    }
+    return retFiles;
 }
 function fileNew(files, name) {
-    files.push({
-        id: files.length,
-        name,
-        content:'',
-    })
+    sfs.newFile(name);
+    files.push(fileObj(files.length, name));
 }
 let files = filesInit([
     {
         id: 0,
-        name:"a.sol",
-        content: sourceCode
+        name:"example.sol",
+        get content(){return sourceCode;}
     }
 ]);
 let compiler;
@@ -76,12 +91,13 @@ export default {
             let file = this.files[id];
             file.content = content;
             //this.files[id].content = content;
-            this.$set(this.files, id, file);
+            //this.$set(this.files, id, file);
             console.log("file changed");
         },
         rename(id, newname){
-            //this.files[id].name = newname;
             let file = this.files[id];
+            console.log("rename:",file.name,newname);
+            sfs.moveFile(file.name, newname);
             file.name = newname;
             this.$set(this.files, id, file);
         },
@@ -115,3 +131,8 @@ export default {
 };
 </script>
 
+<style scoped>
+.font-light {
+    color: azure;
+}
+</style>
