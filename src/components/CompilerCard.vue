@@ -103,7 +103,8 @@ export default {
                 this.outputs = [];
                 this.error = [];
                 try {
-                    const input = this.compilerIntput(this.files[this.activeFile]);
+                    const compileFile = this.files[this.activeFile];
+                    const input = this.compilerIntput(compileFile);
                     const outputs = await this.compiler.compile(
                         JSON.stringify(input),
                         {
@@ -123,6 +124,7 @@ export default {
                         }
                     );
                     this.outputs = JSON.parse(outputs);
+                    this.$emit("compiled", compileFile, outputs);
                     window.outputs = this.outputs;
                 } catch (e) {
                     this.error = e;

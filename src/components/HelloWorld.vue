@@ -6,7 +6,7 @@
         <Layout>
             <Sider hide-trigger :width="250">
               <FileTree :files="files" v-model="activeFile" @new-file="newfile" @rename="rename"/>
-              <CompilerCard :files="files" :activeFile="activeFile"/>
+              <CompilerCard :files="files" :activeFile="activeFile" @compiled="compilerOutput"/>
             </Sider>
             <Content>
                 <FileEditors :files="files" v-model="activeFile" @content-change="fileChange"/>
@@ -64,7 +64,9 @@ function filesInit(files){
 }
 function fileNew(files, name) {
     sfs.newFile(name);
-    files.push(fileObj(files.length, name));
+    const file = fileObj(files.length, name);
+    files.push(file);
+    return file;
 }
 let files = filesInit([
     {
@@ -73,7 +75,7 @@ let files = filesInit([
         get content(){return sourceCode;}
     }
 ]);
-let compiler;
+
 export default {
     name: "HelloWorld",
     data() {
@@ -88,11 +90,19 @@ export default {
     },
     methods: {
         fileChange(id, content){
-            let file = this.files[id];
+            const file = this.files[id];
             file.content = content;
             //this.files[id].content = content;
             //this.$set(this.files, id, file);
             console.log("file changed");
+        },
+        fileByName(name) {
+            for(let i in this.files){
+                const file = this.files[i];
+                if(file.name == name)
+                    return file;
+            }
+            return null;
         },
         rename(id, newname){
             let file = this.files[id];
@@ -101,26 +111,25 @@ export default {
             file.name = newname;
             this.$set(this.files, id, file);
         },
-        newfile(name){
-            if(name == undefined) name = "new"+this.files.length+".sol";
-            fileNew(this.files, name);
+        newfile(prefix, name){
+            let fullname = '';
+            if(name) fullname = prefix + name;
+            else fullname = prefix + `new${this.files.length}.sol`;
+            return fileNew(this.files, fullname); 
         },
-        async ok() {
-            //console.log(solcjs);
-            //console.log(ResolverEngine);
-
-            // or
-
-            // const compiler = await solcjs()
-
-            const output = await compiler(sourceCode, e =>
-                e ? "" : ""
-            );
-
-            //var wrapper = require('solc-wrapper');
-            //var solc = wrapper(window.Module);
-            //console.log(wrapper);
-            console.log(output);
+        newFileWithContent(prefix, name, content){
+            const file = this.newfile(prefix, name);
+            this.fileChange(file.id, content);
+        },
+        compilerOutput(file, outputs){
+            let outfile;
+            try{
+                outfile = this.newfile('build/', `${file.name}.json`);
+            }catch{
+                outfile = this.fileByName(`build/${file.name}.json`);
+            }finally{
+                this.fileChange(outfile.id, outputs);
+            }
         }
     },
     watch:{

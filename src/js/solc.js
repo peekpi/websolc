@@ -15,6 +15,7 @@ function fetchSolcBin(solcVerison) {
 function safeEval(solcSrcCode) {
     //window.srcCode = solcSrcCode;
     //window.Module = null;
+    delete window.Module;
     let execCode = solcSrcCode;
     if(execCode.startsWith('"use strict";'))
         execCode = execCode.slice(13);

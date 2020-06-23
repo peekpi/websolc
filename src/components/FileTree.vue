@@ -1,55 +1,75 @@
 <template>
-    <Tree :data="data" :render="renderContent" class="demo-tree-render" @on-select-change="onSelectChange"></Tree>
+    <Tree
+        :data="data"
+        :render="renderContent"
+        class="demo-tree-render"
+        @on-select-change="onSelectChange"
+    ></Tree>
 </template>
 <script>
-import EditableSpan from "./EditableSpan"
+import EditableSpan from "./EditableSpan";
 export default {
     data() {
+        const render = (h, { root, node, data }) => {
+            root, node;
+            return h(
+                "span",
+                {
+                    style: {
+                        display: "inline-block",
+                        width: "100%"
+                    },
+                    class: "nohover"
+                },
+                [
+                    h("span", [
+                        h("Icon", {
+                            props: {
+                                type: "ios-folder-outline"
+                            },
+                            style: {
+                                marginRight: "8px"
+                            }
+                        }),
+                        h("span", data.title),
+
+                        h("Icon", {
+                            props: {
+                                type: "ios-add"
+                            },
+                            style: {
+                                marginRight: "8px"
+                            },
+                            on: {
+                                click: () => this.$emit("new-file", data.title?`${data.title}/`:'')
+                            }
+                        })
+                    ])
+                ]
+            );
+        };
         return {
             data: [
                 {
                     title: "",
                     expand: true,
-                    disabled:true,
-                    render: (h, { root, node, data }) => {
-                        root, node;
-                        return h(
-                            "span",
-                            {
-                                style: {
-                                    display: "inline-block",
-                                    width: "100%"
-                                },
-                                class: "nohover"
-                            },
-                            [
-                                h("span", [
-                                    h("Icon", {
-                                        props: {
-                                            type: "ios-folder-outline"
-                                        },
-                                        style: {
-                                            marginRight: "8px"
-                                        }
-                                    }),
-                                    h("span", data.title),
-
-                                    h("Icon", {
-                                        props: {
-                                            type: "ios-add"
-                                        },
-                                        style: {
-                                            marginRight: "8px"
-                                        },
-                                        on: {
-                                            click: () => this.$emit("new-file")
-                                        }
-                                    })
-                                ])
-                            ]
-                        );
-                    },
-                    children: this.children(),
+                    disabled: true,
+                    render,
+                    children: [],
+                },
+                {
+                    title: "build",
+                    expand: true,
+                    disabled: true,
+                    render,
+                    children: [],
+                },
+                {
+                    title: "deploy",
+                    expand: true,
+                    disabled: true,
+                    render,
+                    children: [],
                 }
             ],
             buttonProps: {
@@ -59,30 +79,46 @@ export default {
         };
     },
     model: {
-        prop: 'activeFile',
-        event: 'change'
+        prop: "activeFile",
+        event: "change"
     },
     props: ["files", "activeFile"],
     watch: {
-        files(){
-            this.$set(this.data[0], "children", this.children());
+        files() {
+            //this.$set(this.data[0], "children", this.children());
+            this.updateFiles();
         },
-        activeFile(){
-            this.data[0].children.map(
-                child=>{
-                    if(child.id == this.activeFile)
-                        child.selected = true;
-                    else if(child.selected)
-                        child.selected = false;
-                }
-            )
+        activeFile() {
+            this.data[0].children.map(child => {
+                if (child.id == this.activeFile) child.selected = true;
+                else if (child.selected) child.selected = false;
+            });
         }
     },
+    mounted(){
+        this.updateFiles();
+    },
     methods: {
-        children(){
+        updateFiles(){
+            for(let i in this.data) {
+                let nodeData = this.data[i];
+                let filter = file=>file.name.startsWith(`${nodeData.title}/`);
+                if(nodeData.title == '')
+                    filter = file=>!(file.name.startsWith('build/')||file.name.startsWith('deploy/'));
+                nodeData.children = this.children(filter);
+                this.$set(this.data, i, nodeData);
+            }
+        },
+        children(filter) {
             let children = [];
-            for(let id in this.files)
-                children.push({title:this.files[id].name, id:id, selected:id==this.activeFile});
+            for (let id in this.files)
+                if (filter(this.files[id])) {
+                    children.push({
+                        title: this.files[id].name,
+                        id: id,
+                        selected: id == this.activeFile
+                    });
+                }
             return children;
         },
         renderContent(h, { root, node, data }) {
@@ -107,10 +143,10 @@ export default {
                         }),
                         h(EditableSpan, {
                             props: {
-                                name:data.title,
+                                name: data.title
                             },
-                            on:{
-                                rename:newname=>{
+                            on: {
+                                rename: newname => {
                                     this.$emit("rename", data.id, newname);
                                 }
                             }
@@ -133,10 +169,9 @@ export default {
             const index = parent.children.indexOf(data);
             parent.children.splice(index, 1);
         },
-        onSelectChange(a, b){
+        onSelectChange(a, b) {
             b.selected = true;
-            if(this.activeFile != b.id)
-                this.$emit('change', b.id)
+            if (this.activeFile != b.id) this.$emit("change", b.id);
         }
     }
 };
@@ -146,7 +181,7 @@ export default {
     color: azure;
     width: 100%;
     /*margin-right: 5em;*/
-    margin:0;
+    margin: 0;
     padding: 0;
 }
 .demo-tree-render .ivu-tree-title-selected {
