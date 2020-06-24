@@ -37,7 +37,6 @@ export default {
             versions: null,
             solcVersion: "0.5.17+commit.d19bba13",
             outputs: null,
-            error: [],
             selectOutput: 0
         };
     },
@@ -61,7 +60,7 @@ export default {
             const soljsonReleases = window.soljsonReleases;
             let verList = [];
             for (let ver in soljsonReleases) {
-                //if (ver.startsWith("0.5."))
+                if (ver.startsWith("0.5.") || ver.startsWith("0.6."))
                     verList.push(soljsonReleases[ver].slice(9, -3));
             }
             return verList;
@@ -101,7 +100,6 @@ export default {
             }
             if (this.compiler.version().startsWith(this.solcVersion)) {
                 this.outputs = [];
-                this.error = [];
                 try {
                     const compileFile = this.files[this.activeFile];
                     const input = this.compilerIntput(compileFile);
@@ -127,7 +125,7 @@ export default {
                     this.$emit("compiled", compileFile, outputs);
                     window.outputs = this.outputs;
                 } catch (e) {
-                    this.error = e;
+                    this.outputs = e;
                     console.log("compile error:", e);
                 }
                 console.log("outputs", this.outputs);

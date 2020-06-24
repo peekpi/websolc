@@ -27,14 +27,14 @@ pragma solidity >0.4.99 <0.6.0;
 
 contract NewContract {
   function f(uint8 a) public returns (bool) {
-      return a>0;
+    return a>0;
   }
 }
 contract Hello {
-    uint256 x;
-    constructor(uint256 a)public {x=a;}
+  uint256 x;
+  constructor(uint256 a)public {x=a;}
   function f(uint8 a) public returns (bool) {
-      return a<10;
+    return a<10;
   }
 }`;
 

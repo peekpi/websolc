@@ -16,7 +16,7 @@
                 :loading="loading"
             >deploy {{ contractInfo ? contractInfo.name : "[NONE]" }}</Button>
         </Form>
-        <p v-for="(c,index) in contracts" :key="index">{{ c.contract.address }}</p>
+        <p v-for="(c,index) in contracts" :key="index" style="color:black">{{ c.contract.address }}</p>
     </div>
 </template>
 
@@ -31,6 +31,11 @@ export default {
         };
     },
     props: ["contractInfo"],
+    watch:{
+        contractInfo(){
+            this.arguements = [];
+        }
+    },
     computed: {
         contractDeployABI() {
             if (this.contractImpl)
